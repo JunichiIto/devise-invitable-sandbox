@@ -1,3 +1,4 @@
+require 'minitest/mock'
 require 'test_helper'
 
 class UserTest < ActiveSupport::TestCase
@@ -33,5 +34,18 @@ class UserTest < ActiveSupport::TestCase
     user.invite!
     assert user.persisted?
     assert_mail_count(1)
+  end
+
+  test 'With ActiveRecord::RecordInvalid on update and instance method' do
+    user = User.new(email: 'new_user@example.com', name: 'John Doe')
+    user.save(validate: false)
+    assert user.persisted?
+
+    user.name = 'New Name'
+    user.stub(:do_something, -> { raise ActiveRecord::RecordInvalid }) do
+      user.invite!
+      assert_equal 'John Doe', user.reload.name
+      assert_mail_count(0)
+    end
   end
 end

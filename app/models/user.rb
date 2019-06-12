@@ -5,4 +5,12 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable, validate_on_invite: true
 
   validates :name, presence: true
+
+  after_save :do_something
+
+  private
+
+  def do_something
+    # 中身はMockで定義する
+  end
 end
