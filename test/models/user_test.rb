@@ -36,16 +36,22 @@ class UserTest < ActiveSupport::TestCase
     assert_mail_count(1)
   end
 
-  test 'With ActiveRecord::RecordInvalid on update and instance method' do
+  test 'With ActiveRecord::RecordInvalid after save and class method' do
+    user = User.invite!(email: 'new_user@example.com', name: 'John Doe', force_rollback: true)
+    refute user.persisted?
+    assert_mail_count(0)
+  end
+
+  test 'With ActiveRecord::RecordInvalid after save and instance method' do
     user = User.new(email: 'new_user@example.com', name: 'John Doe')
     user.save(validate: false)
     assert user.persisted?
 
     user.name = 'New Name'
-    user.stub(:do_something, -> { raise ActiveRecord::RecordInvalid }) do
-      user.invite!
-      assert_equal 'John Doe', user.reload.name
-      assert_mail_count(0)
-    end
+    user.force_rollback = true
+
+    user.invite!
+    assert_equal 'John Doe', user.reload.name
+    assert_mail_count(0)
   end
 end

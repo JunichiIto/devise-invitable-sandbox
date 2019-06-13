@@ -4,6 +4,8 @@ class User < ApplicationRecord
   devise :invitable, :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable, validate_on_invite: true
 
+  attr_accessor :force_rollback
+
   validates :name, presence: true
 
   after_save :do_something
@@ -11,6 +13,6 @@ class User < ApplicationRecord
   private
 
   def do_something
-    # 中身はMockで定義する
+    raise ActiveRecord::Rollback if force_rollback
   end
 end
